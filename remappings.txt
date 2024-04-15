@@ -1,0 +1,4 @@
+ds-test/=lib/surl/lib/forge-std/lib/ds-test/src/
+forge-std/=lib/forge-std/src/
+solidity-stringutils/=lib/surl/lib/solidity-stringutils/
+surl/=lib/surl/src/
