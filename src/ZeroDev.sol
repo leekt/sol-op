@@ -103,10 +103,9 @@ contract ZeroDev {
     }
 
     function estimateUserOperationGas(PackedUserOperation memory op) public returns (uint256) {
-        
         string[] memory params = new string[](2);
         params[0] = serializePackedOp(op);
-        params[1] = string(abi.encodePacked('"',toHexString(ENTRYPOINT_0_7), '"'));
+        params[1] = string(abi.encodePacked('"', toHexString(ENTRYPOINT_0_7), '"'));
         console.log("EP", params[1]);
         (RPCJson memory result, bytes memory data) = rpcCall(bundler, "eth_estimateUserOperationGas", params);
         console.log("DEBUG");

@@ -12,6 +12,7 @@ contract ZeroDevTest is Test {
     ZeroDev private zd;
     address owner;
     uint256 ownerKey;
+
     function setUp() external {
         string memory bundler = vm.envString("TEST_BUNDLER");
         string memory rpc = vm.envString("TEST_RPC");
@@ -41,7 +42,8 @@ contract ZeroDevTest is Test {
         Kernel kernel = KernelLib.getAddress(owner);
         console.log("Kernel : ", address(kernel));
         //KernelLib.deployAccount(owner);
-        PackedUserOperation memory op = KernelLib.prepareUserOp(kernel, owner, VALIDATION_TYPE_ROOT, KernelLib.encodeExecute(owner, 1, hex""));
+        PackedUserOperation memory op =
+            KernelLib.prepareUserOp(kernel, owner, VALIDATION_TYPE_ROOT, KernelLib.encodeExecute(owner, 1, hex""));
         zd.estimateUserOperationGas(op);
     }
 
