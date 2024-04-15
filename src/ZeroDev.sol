@@ -6,7 +6,7 @@ import {VmSafe} from "forge-std/Vm.sol";
 import "forge-std/console.sol";
 import "forge-std/StdJson.sol";
 import {slice, toUint256} from "./BytesLib.sol";
-import {toAsciiString} from "./StringLib.sol";
+import {toHexString} from "./StringLib.sol";
 
 import "./Structs.sol";
 
@@ -38,8 +38,8 @@ contract ZeroDev {
             vm.serializeAddress(obj, "factory", address(bytes20(slice(op.initCode, 0, 20))));
             vm.serializeBytes(obj, "factoryData", slice(op.initCode, 20, op.initCode.length - 20));
         } else {
-            vm.serializeBytes(obj, "factory", hex"");
-            vm.serializeBytes(obj, "factoryData", hex"");
+            //vm.serializeBytes(obj, "factory", hex"");
+            //vm.serializeBytes(obj, "factoryData", hex"");
         }
         vm.serializeBytes(obj, "callData", op.callData);
         vm.serializeUint(obj, "callGasLimit", uint128(uint256(op.accountGasLimits)));
@@ -53,10 +53,10 @@ contract ZeroDev {
             vm.serializeUint(obj, "paymasterPostOpGasLimit", uint128(bytes16(slice(op.paymasterAndData, 36, 52))));
             vm.serializeBytes(obj, "paymasterData", slice(op.paymasterAndData, 52, op.paymasterAndData.length - 52));
         } else {
-            vm.serializeBytes(obj, "paymaster", hex"");
-            vm.serializeUint(obj, "paymasterVerificationGasLimit", 0);
-            vm.serializeUint(obj, "paymasterPostOpGasLimit", 0);
-            vm.serializeBytes(obj, "paymasterAndData", hex"");
+            //vm.serializeBytes(obj, "paymaster", hex"");
+            //vm.serializeUint(obj, "paymasterVerificationGasLimit", 0);
+            //vm.serializeUint(obj, "paymasterPostOpGasLimit", 0);
+            //vm.serializeBytes(obj, "paymasterAndData", hex"");
         }
         json = vm.serializeBytes(obj, "signature", op.signature);
     }
@@ -77,10 +77,14 @@ contract ZeroDev {
             }
         }
         payload = string(abi.encodePacked(payload, "]}"));
+        console.log("Payload :", payload);
         (uint256 status, bytes memory rawResponse) = rpc.post(headers, payload);
+        console.log("RawResponse : ", string(rawResponse));
         // parse response
         if (status >= 200 && status < 300) {
             bytes memory encoded = vm.parseJson(string(rawResponse));
+            console.log("Encoded :");
+            console.logBytes(encoded);
             bytes32 debug;
             assembly ("memory-safe") {
                 data := mload(0x40)
@@ -99,20 +103,19 @@ contract ZeroDev {
     }
 
     function estimateUserOperationGas(PackedUserOperation memory op) public returns (uint256) {
-        //serializePackedOp(op);
-        //string[] memory params = new string[](2);
-        //params[0] = '"0x09f7ac3640bc1d3293bd34b11d669e2000ff93d7d591c5ebe7045df889df1faa"';
-        //params[1] = "true";
-        //(RPCJson memory result, bytes memory data ) = rpcCall(rpcNode, "eth_getBlockByHash", params);
-        //console.log("DEBUG");
-        //console.logBytes(data);
+        
+        string[] memory params = new string[](2);
+        params[0] = serializePackedOp(op);
+        params[1] = string(abi.encodePacked('"',toHexString(ENTRYPOINT_0_7), '"'));
+        console.log("EP", params[1]);
+        (RPCJson memory result, bytes memory data) = rpcCall(bundler, "eth_estimateUserOperationGas", params);
+        console.log("DEBUG");
+        console.logBytes(data);
     }
 
     function getUserOperationByHash(bytes32 hash) public returns (PackedUserOperation memory) {}
 
     function getUserOperationReceipt(bytes32 hash) public returns (UserOperationReceipt memory) {}
-
-    function getUserOpHash(PackedUserOperation memory op) public returns (bytes32 userOpHash) {}
 
     function chainId() public returns (uint256 id) {
         string[] memory params = new string[](0);
@@ -155,7 +158,7 @@ contract ZeroDev {
     function sendUserOperation(PackedUserOperation memory op) public returns (bytes32 userOpHash) {
         string[] memory params = new string[](2);
         params[0] = serializePackedOp(op);
-        params[1] = toAsciiString(ENTRYPOINT_0_7);
+        params[1] = toHexString(ENTRYPOINT_0_7);
         (, bytes memory data) = rpcCall(bundler, "eth_sendUserOperation", params);
         userOpHash = parseDataStatic(data);
     }

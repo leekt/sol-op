@@ -4,3 +4,6 @@
 [submodule "lib/surl"]
 	path = lib/surl
 	url = https://github.com/memester-xyz/surl
+[submodule "lib/kernel_v3"]
+	path = lib/kernel_v3
+	url = https://github.com/zerodevapp/kernel_v3

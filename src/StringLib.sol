@@ -1,13 +1,27 @@
 pragma solidity ^0.8.0;
 
-function toAsciiString(address x) pure returns (string memory) {
-    bytes memory s = new bytes(40);
-    for (uint256 i = 0; i < 20; i++) {
-        bytes1 b = bytes1(uint8(uint256(uint160(x)) / (2 ** (8 * (19 - i)))));
-        bytes1 hi = bytes1(uint8(b) / 16);
-        bytes1 lo = bytes1(uint8(b) - 16 * uint8(hi));
-        s[2 * i] = hi;
-        s[2 * i + 1] = lo;
+bytes16 constant HEX_DIGITS = "0123456789abcdef";
+
+/**
+ * @dev Converts a `uint256` to its ASCII `string` hexadecimal representation with fixed length.
+ */
+function toHexString(uint256 value, uint256 length) pure returns (string memory) {
+    uint256 localValue = value;
+    bytes memory buffer = new bytes(2 * length + 2);
+    buffer[0] = "0";
+    buffer[1] = "x";
+    for (uint256 i = 2 * length + 1; i > 1; --i) {
+        buffer[i] = HEX_DIGITS[localValue & 0xf];
+        localValue >>= 4;
     }
-    return string(s);
+    require(localValue == 0, "StringsInsufficientHexLength");
+    return string(buffer);
+}
+
+/**
+ * @dev Converts an `address` with fixed length of 20 bytes to its not checksummed ASCII `string` hexadecimal
+ * representation.
+ */
+function toHexString(address addr) pure returns (string memory) {
+    return toHexString(uint256(uint160(addr)), 20);
 }
