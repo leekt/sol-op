@@ -55,17 +55,7 @@ contract ZeroDev {
         }
         payload = string(abi.encodePacked(payload, "]}"));
         (uint256 status, bytes memory rawResponse) = rpc.post(headers, payload);
-        console.log("RawResponse :", string(rawResponse));
         // check for error before this
-        /*
-        0x
-        0000000000000000000000000000000000000000000000000000000000000020
-        0000000000000000000000000000000000000000000000000000000000000001
-        0000000000000000000000000000000000000000000000000000000000000060
-        f2729d8abf43f79874d8d8c7786e1476b62a548761f0c7f6450caaf7cb0ea1ea
-        0000000000000000000000000000000000000000000000000000000000000003
-        322e300000000000000000000000000000000000000000000000000000000000
-        */
         if (status >= 200 && status < 300) {
             bytes memory encoded = vm.parseJson(string(rawResponse));
             if (isResult32) {
@@ -75,8 +65,6 @@ contract ZeroDev {
                     mstore(add(data, 0x20), mload(add(encoded, 0x80)))
                     mstore(0x40, add(data, 0x40))
                 }
-                console.log("Data 32 :");
-                console.logBytes(data);
             } else {
                 assembly ("memory-safe") {
                     data := mload(0x40)
@@ -115,8 +103,6 @@ contract ZeroDev {
     function getUserOperationGasPrice() public returns (GasPriceResult memory res) {
         string[] memory params = new string[](0);
         (RPCJson memory result, bytes memory data) = rpcCall(bundler, "zd_getUserOperationGasPrice", params, false);
-        console.log("Data");
-        console.logBytes(data);
         bytes[] memory structsData = parseDataStructArray(data, 3);
         GasPrice[] memory prices = new GasPrice[](3);
         for (uint256 i = 0; i < 3; i++) {
@@ -206,8 +192,6 @@ contract ZeroDev {
         params[0] = op.serializePackedOp();
         params[1] = string(abi.encodePacked('"', toHexString(ENTRYPOINT_0_7), '"'));
         (, bytes memory data) = rpcCall(bundler, "eth_sendUserOperation", params, true);
-        console.log("Data :");
-        console.logBytes(data);
         userOpHash = bytes32(data);
     }
 
