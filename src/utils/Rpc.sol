@@ -3,11 +3,14 @@ pragma solidity ^0.8.0;
 import "../Structs.sol";
 import {Surl} from "surl/Surl.sol";
 import {Vm} from "forge-std/Vm.sol";
+
 Vm constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
 library RPC {
     using Surl for *;
+
     error RequestFailed(uint256 status);
+
     function rpcCall(string memory rpc, string memory method, string[] memory params, bool isResult32)
         internal
         returns (RPCJson memory response, bytes memory data)

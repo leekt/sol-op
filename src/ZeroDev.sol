@@ -23,30 +23,28 @@ struct ZD {
 
 /// @notice zerodev library to use with solidity directly
 library ZeroDev {
-
     VmSafe private constant vm = VmSafe(address(uint160(uint256(keccak256("hevm cheat code")))));
+
     using RPC for string;
     using DataFormatter for bytes;
 
     using Surl for *;
     using UserOperationLib for PackedUserOperation;
 
-    function newZD(string memory _rpc, string memory _bundler, string memory _paymaster) internal returns(ZD memory) {
-        ZD memory zd = ZD({
-            rpc : _rpc,
-            bundler : _bundler,
-            paymaster : _paymaster,
-            remoteChainId : 0
-        });
+    function newZD(string memory _rpc, string memory _bundler, string memory _paymaster) internal returns (ZD memory) {
+        ZD memory zd = ZD({rpc: _rpc, bundler: _bundler, paymaster: _paymaster, remoteChainId: 0});
         zd.remoteChainId = chainId(zd);
         return zd;
     }
 
-    function getUserOpHash(ZD memory zd, PackedUserOperation calldata userOp) public view returns (bytes32) {
+    function getUserOpHash(ZD memory zd, PackedUserOperation memory userOp) internal view returns (bytes32) {
         return keccak256(abi.encode(userOp.hash(), address(ENTRYPOINT_0_7), zd.remoteChainId));
     }
 
-    function serializePaymasterPackedOp(ZD memory zd, PackedUserOperation memory op) internal returns (string memory json) {
+    function serializePaymasterPackedOp(ZD memory zd, PackedUserOperation memory op)
+        internal
+        returns (string memory json)
+    {
         string memory obj = "sponsoredOp";
         vm.serializeUint(obj, "chainId", zd.remoteChainId);
         string memory pop = op.serializePackedOp();
@@ -56,7 +54,10 @@ library ZeroDev {
         json = vm.serializeBool(obj, "manualGasEstimation", false);
     }
 
-    function estimateUserOperationGas(ZD memory zd, PackedUserOperation memory op) public returns (GasEstimationResult memory res) {
+    function estimateUserOperationGas(ZD memory zd, PackedUserOperation memory op)
+        internal
+        returns (GasEstimationResult memory res)
+    {
         string[] memory params = new string[](2);
         params[0] = op.serializePackedOp();
         params[1] = string(abi.encodePacked('"', LibString.toHexString(ENTRYPOINT_0_7), '"'));
@@ -74,7 +75,7 @@ library ZeroDev {
         res.verificationGasLimit = values[4];
     }
 
-    function getUserOperationGasPrice(ZD memory zd) public returns (GasPriceResult memory res) {
+    function getUserOperationGasPrice(ZD memory zd) internal returns (GasPriceResult memory res) {
         string[] memory params = new string[](0);
         (RPCJson memory result, bytes memory data) = zd.bundler.rpcCall("zd_getUserOperationGasPrice", params, false);
         bytes[] memory structsData = data.parseDataStructArray(3);
@@ -93,13 +94,13 @@ library ZeroDev {
         res.standard = prices[2];
     }
 
-    function chainId(ZD memory zd) public returns (uint256 id) {
+    function chainId(ZD memory zd) internal returns (uint256 id) {
         string[] memory params = new string[](0);
         (RPCJson memory result, bytes memory data) = zd.rpc.rpcCall("eth_chainId", params, false);
         id = uint256(data.parseDataStatic());
     }
 
-    function supportedEntryPoints(ZD memory zd) public returns (address[] memory entrypoints) {
+    function supportedEntryPoints(ZD memory zd) internal returns (address[] memory entrypoints) {
         string[] memory params = new string[](0);
         (RPCJson memory result, bytes memory data) = zd.bundler.rpcCall("eth_supportedEntryPoints", params, false);
         bytes32[] memory arrs = data.parseDataStaticArray();
@@ -109,7 +110,7 @@ library ZeroDev {
         }
     }
 
-    function sendUserOperation(ZD memory zd, PackedUserOperation memory op) public returns (bytes32 userOpHash) {
+    function sendUserOperation(ZD memory zd, PackedUserOperation memory op) internal returns (bytes32 userOpHash) {
         string[] memory params = new string[](2);
         params[0] = op.serializePackedOp();
         params[1] = string(abi.encodePacked('"', LibString.toHexString(ENTRYPOINT_0_7), '"'));
@@ -117,7 +118,10 @@ library ZeroDev {
         userOpHash = bytes32(data);
     }
 
-    function sponsorUserOperation(ZD memory zd, PackedUserOperation memory op) public returns (SponsorUserOpResult memory res) {
+    function sponsorUserOperation(ZD memory zd, PackedUserOperation memory op)
+        internal
+        returns (SponsorUserOpResult memory res)
+    {
         string[] memory params = new string[](1);
         string memory json = serializePaymasterPackedOp(zd, op);
         params[0] = json;
@@ -133,7 +137,7 @@ library ZeroDev {
         res.verificationGasLimit = uint256(preformat.verificationGasLimit.dynamicToStatic());
     }
 
-    function getUserOperationByHash(bytes32 userOpHash) public returns (PackedUserOperation memory) {}
+    function getUserOperationByHash(bytes32 userOpHash) internal returns (PackedUserOperation memory) {}
 
-    function getUserOperationReceipt(bytes32 userOpHash) public returns (UserOperationReceipt memory) {}
+    function getUserOperationReceipt(bytes32 userOpHash) internal returns (UserOperationReceipt memory) {}
 }

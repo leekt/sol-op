@@ -1,66 +1,48 @@
-## Foundry
+# sol-op
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+`sol-op` is a Solidity library that allows developers to interact with the Bundler API directly from their Solidity contracts, without the need to switch context to JavaScript or TypeScript. This library leverages "surl," a Solidity HTTP request library, and Foundry's native JSON parsing library, stdJson, to facilitate seamless communication with the Bundler API.
 
-Foundry consists of:
+## Features
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+- Send userOp transactions to the Bundler API using Solidity
+- No need to switch between Solidity and JavaScript/TypeScript
+- Built-in support for ZeroDev, with easy extensibility for other bundlers
+- Utilizes the "surl" library for making HTTP requests from Solidity
+- Leverages Foundry's stdJson library for efficient JSON parsing
 
-## Documentation
+## Installation
 
-https://book.getfoundry.sh/
+1. Install sol-op:
+   ```
+   forge install leekt/sol-op
+   ```
 
-## Usage
+## Contributing
 
-### Build
+We welcome contributions to `sol-op`! If you'd like to contribute, please follow these steps:
 
-```shell
-$ forge build
-```
+1. Fork the repository
+2. Create a new branch for your feature or bug fix
+3. Make your changes and commit them with descriptive commit messages
+4. Push your changes to your fork
+5. Submit a pull request to the main repository
 
-### Test
+Please ensure that your code adheres to the project's coding standards and includes appropriate tests.
 
-```shell
-$ forge test
-```
+## License
 
-### Format
+`sol-op` is released under the [MIT License](./LICENSE).
 
-```shell
-$ forge fmt
-```
+## Acknowledgements
 
-### Gas Snapshots
+- [surl](https://github.com/memester-xyz/surl) - Solidity HTTP request library
+- [forge-std](https://github.com/foundry-rs/forge-std) - Foundry's standard library for Solidity
+- [ZeroDev](https://zerodev.app/) - Decentralized transaction infrastructure for Ethereum
 
-```shell
-$ forge snapshot
-```
+## Contact
 
-### Anvil
+If you have any questions, suggestions, or feedback, please feel free to reach out to the maintainers at [leekt216@gmail.com](mailto:leekt216@gmail.com).
 
-```shell
-$ anvil
-```
+Happy coding with `sol-op`!
 
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+-this is AI generated markdown-
