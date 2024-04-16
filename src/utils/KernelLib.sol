@@ -6,11 +6,11 @@ import {FactoryStaker} from "kernel_v3/src/factory/FactoryStaker.sol";
 import {KernelFactory} from "kernel_v3/src/factory/KernelFactory.sol";
 import {ValidationType} from "kernel_v3/src/utils/ValidationTypeLib.sol";
 import {ExecLib} from "kernel_v3/src/utils/ExecLib.sol";
-import {IEntryPoint} from "./interfaces/IEntryPoint.sol";
+import {IEntryPoint} from "../interfaces/IEntryPoint.sol";
 import {VALIDATION_TYPE_ROOT} from "kernel_v3/src/types/Constants.sol";
 import {ECDSAValidator} from "kernel_v3/src/validator/ECDSAValidator.sol";
 import {Vm} from "forge-std/Vm.sol";
-import "./Structs.sol";
+import "../Structs.sol";
 
 address constant DEPLOY_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
 IEntryPoint constant ENTRYPOINT = IEntryPoint(0x0000000071727De22E5E9d8BAf0edAc6f37da032);
