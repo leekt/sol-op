@@ -6,10 +6,11 @@ import {KernelLib} from "src/KernelLib.sol";
 import {Kernel} from "kernel_v3/src/Kernel.sol";
 import {EntryPointLib} from "src/EntryPointLib.sol";
 import {VALIDATION_TYPE_ROOT} from "kernel_v3/src/types/Constants.sol";
-import {GasEstimationResult, GasPriceResult} from "src/Structs.sol";
+import {GasEstimationResult, GasPriceResult, SponsorUserOpResult} from "src/Structs.sol";
 import {ECDSA} from "solady/utils/ECDSA.sol";
 import {UserOperationLib} from "src/UserOperationLib.sol";
 import "forge-std/Test.sol";
+import "forge-std/console.sol";
 
 contract ZeroDevTest is Test {
     using UserOperationLib for PackedUserOperation;
@@ -54,10 +55,14 @@ contract ZeroDevTest is Test {
         zd.estimateUserOperationGas(op);
         GasPriceResult memory res = zd.getUserOperationGasPrice();
         op.applyGasPrice(res.fast);
+        SponsorUserOpResult memory sponsor = zd.sponsorUserOperation(op);
+        op.applySponsorResult(sponsor);
         bytes32 hash = zd.getUserOpHash(op);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerKey, ECDSA.toEthSignedMessageHash(hash));
         op.signature = abi.encodePacked(r, s, v);
-        zd.sendUserOperation(op);
+        bytes32 h = zd.sendUserOperation(op);
+        console.log("Hash :");
+        console.logBytes32(hash);
     }
 
     function testChainId() external {

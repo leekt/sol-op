@@ -6,7 +6,7 @@ import {VmSafe} from "forge-std/Vm.sol";
 import "forge-std/console.sol";
 import "forge-std/StdJson.sol";
 import {slice, toUint256} from "./BytesLib.sol";
-import {toHexString} from "./StringLib.sol";
+import {LibString} from "solady/utils/LibString.sol";
 import {IEntryPoint} from "./interfaces/IEntryPoint.sol";
 import "./Structs.sol";
 import {UserOperationLib} from "./UserOperationLib.sol";
@@ -38,6 +38,16 @@ contract ZeroDev {
         return keccak256(abi.encode(userOp.hash(), address(ENTRYPOINT_0_7), remoteChainId));
     }
 
+    function serializePaymasterPackedOp(PackedUserOperation memory op) internal returns (string memory json) {
+        string memory obj = "sponsoredOp";
+        vm.serializeUint(obj, "chainId", remoteChainId);
+        string memory pop = op.serializePackedOp();
+        vm.serializeString(obj, "userOp", pop);
+        vm.serializeAddress(obj, "entryPointAddress", ENTRYPOINT_0_7);
+        vm.serializeBool(obj, "shouldOverrideFee", true);
+        json = vm.serializeBool(obj, "manualGasEstimation", false);
+    }
+
     function rpcCall(string memory rpc, string memory method, string[] memory params, bool isResult32)
         internal
         returns (RPCJson memory response, bytes memory data)
@@ -57,7 +67,10 @@ contract ZeroDev {
         (uint256 status, bytes memory rawResponse) = rpc.post(headers, payload);
         // check for error before this
         if (status >= 200 && status < 300) {
+            console.log("RawResponse :", string(rawResponse));
+            console.log("Encoded :");
             bytes memory encoded = vm.parseJson(string(rawResponse));
+            console.logBytes(encoded);
             if (isResult32) {
                 assembly ("memory-safe") {
                     data := mload(0x40)
@@ -83,7 +96,7 @@ contract ZeroDev {
     function estimateUserOperationGas(PackedUserOperation memory op) public returns (GasEstimationResult memory res) {
         string[] memory params = new string[](2);
         params[0] = op.serializePackedOp();
-        params[1] = string(abi.encodePacked('"', toHexString(ENTRYPOINT_0_7), '"'));
+        params[1] = string(abi.encodePacked('"', LibString.toHexString(ENTRYPOINT_0_7), '"'));
         (RPCJson memory result, bytes memory data) = rpcCall(bundler, "eth_estimateUserOperationGas", params, false);
         bytes[] memory arr = parseDataDynamicArray(data, 5);
         uint256[] memory values = new uint256[](5);
@@ -119,8 +132,6 @@ contract ZeroDev {
         res.standard = prices[2];
     }
 
-    function getUserOperationReceipt(bytes32 userOpHash) public returns (UserOperationReceipt memory) {}
-
     function chainId() public returns (uint256 id) {
         string[] memory params = new string[](0);
         (RPCJson memory result, bytes memory data) = rpcCall(rpcNode, "eth_chainId", params, false);
@@ -137,7 +148,7 @@ contract ZeroDev {
         }
     }
 
-    function parseDataStatic(bytes memory data) internal view returns (bytes32 res) {
+    function parseDataStatic(bytes memory data) internal pure returns (bytes32 res) {
         uint256 dataSize = uint256(bytes32(slice(data, 0, 32)));
         require(data.length >= dataSize + 32, "data too small for static");
         require(dataSize <= 32, "data size too big for static");
@@ -150,7 +161,7 @@ contract ZeroDev {
         }
     }
 
-    function parseDataStaticArray(bytes memory data) internal view returns (bytes32[] memory arr) {
+    function parseDataStaticArray(bytes memory data) internal pure returns (bytes32[] memory arr) {
         uint256 arrLen = uint256(bytes32(slice(data, 0, 32)));
         arr = new bytes32[](arrLen);
         require(data.length >= (arrLen + 1) * 32, "data too small for static array");
@@ -159,7 +170,7 @@ contract ZeroDev {
         }
     }
 
-    function parseDataDynamicArray(bytes memory data, uint256 len) internal view returns (bytes[] memory arr) {
+    function parseDataDynamicArray(bytes memory data, uint256 len) internal pure returns (bytes[] memory arr) {
         arr = new bytes[](len);
         for (uint256 i = 0; i < len; i++) {
             uint256 offset = uint256(bytes32(slice(data, i * 32, 32)));
@@ -168,7 +179,7 @@ contract ZeroDev {
         }
     }
 
-    function parseDataStructArray(bytes memory data, uint256 len) internal view returns (bytes[] memory arr) {
+    function parseDataStructArray(bytes memory data, uint256 len) internal pure returns (bytes[] memory arr) {
         arr = new bytes[](len);
         for (uint256 i = 0; i < len; i++) {
             uint256 offset = uint256(bytes32(slice(data, i * 32, 32)));
@@ -178,7 +189,7 @@ contract ZeroDev {
         }
     }
 
-    function dynamicToStatic(bytes memory data) internal view returns (bytes32 res) {
+    function dynamicToStatic(bytes memory data) internal pure returns (bytes32 res) {
         require(data.length <= 32, "data size too big to convert to static");
         bytes memory value = slice(data, 0, data.length);
         assembly {
@@ -190,10 +201,26 @@ contract ZeroDev {
     function sendUserOperation(PackedUserOperation memory op) public returns (bytes32 userOpHash) {
         string[] memory params = new string[](2);
         params[0] = op.serializePackedOp();
-        params[1] = string(abi.encodePacked('"', toHexString(ENTRYPOINT_0_7), '"'));
+        params[1] = string(abi.encodePacked('"', LibString.toHexString(ENTRYPOINT_0_7), '"'));
         (, bytes memory data) = rpcCall(bundler, "eth_sendUserOperation", params, true);
         userOpHash = bytes32(data);
     }
 
-    function sponsorUserOperation(PackedUserOperation memory op) public returns (PackedUserOperation memory) {}
+    function getUserOperationReceipt(bytes32 userOpHash) public returns (UserOperationReceipt memory) {}
+
+    function sponsorUserOperation(PackedUserOperation memory op) public returns (SponsorUserOpResult memory res) {
+        string[] memory params = new string[](1);
+        string memory json = serializePaymasterPackedOp(op);
+        params[0] = json;
+        (, bytes memory data) = rpcCall(paymaster, "zd_sponsorUserOperation", params, false);
+        PreFormatPaymasterResult memory preformat =
+            abi.decode(abi.encodePacked(bytes32(uint256(32)), data), (PreFormatPaymasterResult));
+        res.callGasLimit = uint256(dynamicToStatic(preformat.callGasLimit));
+        res.paymaster = preformat.paymaster;
+        res.paymasterData = preformat.paymasterData;
+        res.paymasterPostOpGasLimit = uint256(dynamicToStatic(preformat.paymasterPostOpGasLimit));
+        res.paymasterVerificationGasLimit = uint256(dynamicToStatic(preformat.paymasterVerificationGasLimit));
+        res.preVerificationGas = uint256(dynamicToStatic(preformat.preVerificationGas));
+        res.verificationGasLimit = uint256(dynamicToStatic(preformat.verificationGasLimit));
+    }
 }

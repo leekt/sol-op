@@ -46,6 +46,26 @@ struct GasPriceResult {
     GasPrice standard;
     GasPrice fast;
 }
+
+struct PreFormatPaymasterResult {
+    bytes callGasLimit;
+    address paymaster;
+    bytes paymasterData;
+    bytes paymasterPostOpGasLimit;
+    bytes paymasterVerificationGasLimit;
+    bytes preVerificationGas;
+    bytes verificationGasLimit;
+}
+
+struct SponsorUserOpResult {
+    uint256 callGasLimit;
+    address paymaster;
+    bytes paymasterData;
+    uint256 paymasterPostOpGasLimit;
+    uint256 paymasterVerificationGasLimit;
+    uint256 preVerificationGas;
+    uint256 verificationGasLimit;
+}
 // bundler 0.7 userOp
 //  "params": [
 //    {

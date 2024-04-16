@@ -1,4 +1,4 @@
-import {PackedUserOperation} from "./Structs.sol";
+import {PackedUserOperation, SponsorUserOpResult} from "./Structs.sol";
 import {VmSafe} from "forge-std/Vm.sol";
 import {slice} from "./BytesLib.sol";
 import {GasPrice} from "./Structs.sol";
@@ -34,6 +34,17 @@ library UserOperationLib {
 
     function applyGasPrice(PackedUserOperation memory op, GasPrice memory gasPrice) internal pure {
         op.gasFees = bytes32(abi.encodePacked(uint128(gasPrice.maxPriorityFeePerGas), uint128(gasPrice.maxFeePerGas)));
+    }
+
+    function applySponsorResult(PackedUserOperation memory op, SponsorUserOpResult memory res) internal pure {
+        op.preVerificationGas = res.preVerificationGas;
+        op.paymasterAndData = abi.encodePacked(
+            res.paymaster,
+            uint128(res.paymasterVerificationGasLimit),
+            uint128(res.paymasterPostOpGasLimit),
+            res.paymasterData
+        );
+        op.accountGasLimits = bytes32(abi.encodePacked(uint128(res.verificationGasLimit), uint128(res.callGasLimit)));
     }
 
     function serializePackedOp(PackedUserOperation memory op) internal returns (string memory json) {
