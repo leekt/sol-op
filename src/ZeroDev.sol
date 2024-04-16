@@ -1,4 +1,4 @@
-//SPDX-License-Identifier :
+//SPDX-License-Identifier : MIT
 pragma solidity ^0.8.0;
 
 import {Surl} from "surl/Surl.sol";
@@ -65,12 +65,9 @@ contract ZeroDev {
         }
         payload = string(abi.encodePacked(payload, "]}"));
         (uint256 status, bytes memory rawResponse) = rpc.post(headers, payload);
-        // check for error before this
         if (status >= 200 && status < 300) {
-            console.log("RawResponse :", string(rawResponse));
-            console.log("Encoded :");
+            // TODO : there can be error even if status is 200
             bytes memory encoded = vm.parseJson(string(rawResponse));
-            console.logBytes(encoded);
             if (isResult32) {
                 assembly ("memory-safe") {
                     data := mload(0x40)
@@ -110,8 +107,6 @@ contract ZeroDev {
         res.preVerificationGas = values[3];
         res.verificationGasLimit = values[4];
     }
-
-    function getUserOperationByHash(bytes32 userOpHash) public returns (PackedUserOperation memory) {}
 
     function getUserOperationGasPrice() public returns (GasPriceResult memory res) {
         string[] memory params = new string[](0);
@@ -206,8 +201,6 @@ contract ZeroDev {
         userOpHash = bytes32(data);
     }
 
-    function getUserOperationReceipt(bytes32 userOpHash) public returns (UserOperationReceipt memory) {}
-
     function sponsorUserOperation(PackedUserOperation memory op) public returns (SponsorUserOpResult memory res) {
         string[] memory params = new string[](1);
         string memory json = serializePaymasterPackedOp(op);
@@ -223,4 +216,8 @@ contract ZeroDev {
         res.preVerificationGas = uint256(dynamicToStatic(preformat.preVerificationGas));
         res.verificationGasLimit = uint256(dynamicToStatic(preformat.verificationGasLimit));
     }
+
+    function getUserOperationByHash(bytes32 userOpHash) public returns (PackedUserOperation memory) {}
+
+    function getUserOperationReceipt(bytes32 userOpHash) public returns (UserOperationReceipt memory) {}
 }
