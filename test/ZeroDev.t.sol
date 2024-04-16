@@ -22,6 +22,8 @@ contract ZeroDevTest is Test {
         string memory bundler = vm.envString("TEST_BUNDLER");
         string memory rpc = vm.envString("TEST_RPC");
         string memory paymaster = vm.envString("TEST_PAYMASTER");
+        uint256 fork = vm.createFork(rpc);
+        vm.selectFork(fork);
         zd = new ZeroDev(rpc, bundler, paymaster);
         (owner, ownerKey) = makeAddrAndKey("Owner");
         EntryPointLib.deploy();
