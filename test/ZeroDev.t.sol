@@ -1,21 +1,22 @@
 // SPDX-License-Identifier : MIT
 pragma solidity ^0.8.0;
 
-import {ZeroDev, PackedUserOperation} from "src/ZeroDev.sol";
-import {KernelLib} from "src/KernelLib.sol";
+import {ZeroDev, ZD, PackedUserOperation} from "src/ZeroDev.sol";
+import {KernelLib} from "src/utils/KernelLib.sol";
 import {Kernel} from "kernel_v3/src/Kernel.sol";
-import {EntryPointLib} from "src/EntryPointLib.sol";
+import {EntryPointLib} from "src/utils/EntryPointLib.sol";
 import {VALIDATION_TYPE_ROOT} from "kernel_v3/src/types/Constants.sol";
 import {GasEstimationResult, GasPriceResult, SponsorUserOpResult} from "src/Structs.sol";
 import {ECDSA} from "solady/utils/ECDSA.sol";
-import {UserOperationLib} from "src/UserOperationLib.sol";
+import {UserOperationLib} from "src/utils/UserOperationLib.sol";
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
 contract ZeroDevTest is Test {
     using UserOperationLib for PackedUserOperation;
+    using ZeroDev for ZD;
 
-    ZeroDev private zd;
+    ZD zd;
     address owner;
     uint256 ownerKey;
 
@@ -25,7 +26,7 @@ contract ZeroDevTest is Test {
         string memory paymaster = vm.envString("TEST_PAYMASTER");
         uint256 fork = vm.createFork(rpc);
         vm.selectFork(fork);
-        zd = new ZeroDev(rpc, bundler, paymaster);
+        zd = ZeroDev.newZD(rpc, bundler, paymaster);
         (owner, ownerKey) = makeAddrAndKey("Owner");
         EntryPointLib.deploy();
         KernelLib.deploy();

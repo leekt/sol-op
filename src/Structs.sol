@@ -66,22 +66,3 @@ struct SponsorUserOpResult {
     uint256 preVerificationGas;
     uint256 verificationGasLimit;
 }
-// bundler 0.7 userOp
-//  "params": [
-//    {
-//      sender, // address
-//      nonce, // uint256
-//      factory, // address
-//      factoryData, // bytes
-//      callData, // bytes
-//      callGasLimit, // uint256
-//      verificationGasLimit, // uint256
-//      preVerificationGas, // uint256
-//      maxFeePerGas, // uint256
-//      maxPriorityFeePerGas, // uint256
-//      paymaster, // address
-//      paymasterVerificationGasLimit, // uint256
-//      paymasterPostOpGasLimit, // uint256
-//      paymasterData, // bytes
-//      signature // bytes
-//    },

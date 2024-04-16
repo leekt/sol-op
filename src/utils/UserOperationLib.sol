@@ -1,7 +1,7 @@
-import {PackedUserOperation, SponsorUserOpResult} from "./Structs.sol";
+import {PackedUserOperation, SponsorUserOpResult} from "../Structs.sol";
 import {VmSafe} from "forge-std/Vm.sol";
 import {slice} from "./BytesLib.sol";
-import {GasPrice} from "./Structs.sol";
+import {GasPrice} from "../Structs.sol";
 
 library UserOperationLib {
     VmSafe private constant vm = VmSafe(address(uint160(uint256(keccak256("hevm cheat code")))));
