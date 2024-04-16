@@ -64,14 +64,14 @@ library KernelLib {
         );
     }
 
-    function prepareUserOp(Kernel kernel, address signer, ValidationType vType, bytes memory callData)
+    function prepareUserOp(Kernel kernel, address signer, ValidationType vType, bytes memory callData, bool notDeployed)
         internal
         returns (PackedUserOperation memory op)
     {
         op = PackedUserOperation({
             sender: address(kernel),
             nonce: encodeNonce(kernel, vType, false),
-            initCode: address(kernel).code.length == 0
+            initCode: notDeployed
                 ? abi.encodePacked(
                     address(STAKER),
                     abi.encodeWithSelector(FactoryStaker.deployWithFactory.selector, FACTORY, initData(signer), bytes32(0))

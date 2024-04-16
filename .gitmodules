@@ -7,3 +7,6 @@
 [submodule "lib/kernel_v3"]
 	path = lib/kernel_v3
 	url = https://github.com/zerodevapp/kernel_v3
+[submodule "lib/solady"]
+	path = lib/solady
+	url = https://github.com/vectorized/solady

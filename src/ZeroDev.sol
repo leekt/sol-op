@@ -7,8 +7,9 @@ import "forge-std/console.sol";
 import "forge-std/StdJson.sol";
 import {slice, toUint256} from "./BytesLib.sol";
 import {toHexString} from "./StringLib.sol";
-
+import {IEntryPoint} from "./interfaces/IEntryPoint.sol";
 import "./Structs.sol";
+import {UserOperationLib} from "./UserOperationLib.sol";
 
 address constant ENTRYPOINT_0_7 = 0x0000000071727De22E5E9d8BAf0edAc6f37da032;
 
@@ -19,49 +20,25 @@ contract ZeroDev {
     VmSafe private constant vm = VmSafe(address(uint160(uint256(keccak256("hevm cheat code")))));
 
     using Surl for *;
+    using UserOperationLib for PackedUserOperation;
 
     string public rpcNode;
     string public bundler;
     string public paymaster;
+    uint256 public remoteChainId;
 
     constructor(string memory _rpc, string memory _bundler, string memory _paymaster) {
         rpcNode = _rpc;
         bundler = _bundler;
         paymaster = _paymaster;
+        remoteChainId = chainId();
     }
 
-    function serializePackedOp(PackedUserOperation memory op) internal returns (string memory json) {
-        string memory obj = "op";
-        vm.serializeAddress(obj, "sender", op.sender);
-        vm.serializeUint(obj, "nonce", op.nonce);
-        if (op.initCode.length > 0) {
-            vm.serializeAddress(obj, "factory", address(bytes20(slice(op.initCode, 0, 20))));
-            vm.serializeBytes(obj, "factoryData", slice(op.initCode, 20, op.initCode.length - 20));
-        } else {
-            //vm.serializeBytes(obj, "factory", hex"");
-            //vm.serializeBytes(obj, "factoryData", hex"");
-        }
-        vm.serializeBytes(obj, "callData", op.callData);
-        vm.serializeUint(obj, "callGasLimit", uint128(uint256(op.accountGasLimits)));
-        vm.serializeUint(obj, "verificationGasLimit", uint128(uint256(op.accountGasLimits >> 128)));
-        vm.serializeUint(obj, "preVerificationGas", op.preVerificationGas);
-        vm.serializeUint(obj, "maxFeePerGas", uint128(uint256(op.gasFees)));
-        vm.serializeUint(obj, "maxPriorityFeePerGas", uint128(uint256(op.gasFees >> 128)));
-        if (op.paymasterAndData.length > 0) {
-            vm.serializeAddress(obj, "paymaster", address(bytes20(slice(op.paymasterAndData, 0, 20))));
-            vm.serializeUint(obj, "paymasterVerificationGasLimit", uint128(bytes16(slice(op.paymasterAndData, 20, 16))));
-            vm.serializeUint(obj, "paymasterPostOpGasLimit", uint128(bytes16(slice(op.paymasterAndData, 36, 52))));
-            vm.serializeBytes(obj, "paymasterData", slice(op.paymasterAndData, 52, op.paymasterAndData.length - 52));
-        } else {
-            //vm.serializeBytes(obj, "paymaster", hex"");
-            //vm.serializeUint(obj, "paymasterVerificationGasLimit", 0);
-            //vm.serializeUint(obj, "paymasterPostOpGasLimit", 0);
-            //vm.serializeBytes(obj, "paymasterAndData", hex"");
-        }
-        json = vm.serializeBytes(obj, "signature", op.signature);
+    function getUserOpHash(PackedUserOperation calldata userOp) public view returns (bytes32) {
+        return keccak256(abi.encode(userOp.hash(), address(ENTRYPOINT_0_7), remoteChainId));
     }
 
-    function rpcCall(string memory rpc, string memory method, string[] memory params)
+    function rpcCall(string memory rpc, string memory method, string[] memory params, bool isResult32)
         internal
         returns (RPCJson memory response, bytes memory data)
     {
@@ -77,54 +54,96 @@ contract ZeroDev {
             }
         }
         payload = string(abi.encodePacked(payload, "]}"));
-        console.log("Payload :", payload);
         (uint256 status, bytes memory rawResponse) = rpc.post(headers, payload);
-        console.log("RawResponse : ", string(rawResponse));
-        // parse response
+        console.log("RawResponse :", string(rawResponse));
+        // check for error before this
+        /*
+        0x
+        0000000000000000000000000000000000000000000000000000000000000020
+        0000000000000000000000000000000000000000000000000000000000000001
+        0000000000000000000000000000000000000000000000000000000000000060
+        f2729d8abf43f79874d8d8c7786e1476b62a548761f0c7f6450caaf7cb0ea1ea
+        0000000000000000000000000000000000000000000000000000000000000003
+        322e300000000000000000000000000000000000000000000000000000000000
+        */
         if (status >= 200 && status < 300) {
             bytes memory encoded = vm.parseJson(string(rawResponse));
-            console.log("Encoded :");
-            console.logBytes(encoded);
-            bytes32 debug;
-            assembly ("memory-safe") {
-                data := mload(0x40)
-                let offset := encoded // encoded offset
-                debug := mload(offset)
-                offset := add(add(offset, 0x40), mload(add(offset, 0x80)))
-                debug := offset
-                debug := encoded
-                mstore(data, sub(add(add(encoded, mload(encoded)), 0x20), offset)) // length of data will be sub(encodedOffset + encodedLength - offset)
-                mcopy(add(data, 0x20), offset, mload(data))
-                mstore(0x40, add(add(data, 0x20), mload(data)))
+            if (isResult32) {
+                assembly ("memory-safe") {
+                    data := mload(0x40)
+                    mstore(data, 0x20)
+                    mstore(add(data, 0x20), mload(add(encoded, 0x80)))
+                    mstore(0x40, add(data, 0x40))
+                }
+                console.log("Data 32 :");
+                console.logBytes(data);
+            } else {
+                assembly ("memory-safe") {
+                    data := mload(0x40)
+                    let offset := encoded // encoded offset
+                    offset := add(add(offset, 0x40), mload(add(offset, 0x80)))
+                    mstore(data, sub(add(add(encoded, mload(encoded)), 0x20), offset)) // length of data will be sub(encodedOffset + encodedLength - offset)
+                    mcopy(add(data, 0x20), offset, mload(data))
+                    mstore(0x40, add(add(data, 0x20), mload(data)))
+                }
             }
         } else {
             revert RequestFailed(status);
         }
     }
 
-    function estimateUserOperationGas(PackedUserOperation memory op) public returns (uint256) {
+    function estimateUserOperationGas(PackedUserOperation memory op) public returns (GasEstimationResult memory res) {
         string[] memory params = new string[](2);
-        params[0] = serializePackedOp(op);
+        params[0] = op.serializePackedOp();
         params[1] = string(abi.encodePacked('"', toHexString(ENTRYPOINT_0_7), '"'));
-        console.log("EP", params[1]);
-        (RPCJson memory result, bytes memory data) = rpcCall(bundler, "eth_estimateUserOperationGas", params);
-        console.log("DEBUG");
-        console.logBytes(data);
+        (RPCJson memory result, bytes memory data) = rpcCall(bundler, "eth_estimateUserOperationGas", params, false);
+        bytes[] memory arr = parseDataDynamicArray(data, 5);
+        uint256[] memory values = new uint256[](5);
+        for (uint256 i = 0; i < arr.length; i++) {
+            values[i] = uint256(dynamicToStatic(arr[i]));
+        }
+        // json is parsed on alphabetical order
+        res.callGasLimit = values[0];
+        res.paymasterPostOpGasLimit = values[1];
+        res.paymasterVerificationGasLimit = values[2];
+        res.preVerificationGas = values[3];
+        res.verificationGasLimit = values[4];
     }
 
-    function getUserOperationByHash(bytes32 hash) public returns (PackedUserOperation memory) {}
+    function getUserOperationByHash(bytes32 userOpHash) public returns (PackedUserOperation memory) {}
 
-    function getUserOperationReceipt(bytes32 hash) public returns (UserOperationReceipt memory) {}
+    function getUserOperationGasPrice() public returns (GasPriceResult memory res) {
+        string[] memory params = new string[](0);
+        (RPCJson memory result, bytes memory data) = rpcCall(bundler, "zd_getUserOperationGasPrice", params, false);
+        console.log("Data");
+        console.logBytes(data);
+        bytes[] memory structsData = parseDataStructArray(data, 3);
+        GasPrice[] memory prices = new GasPrice[](3);
+        for (uint256 i = 0; i < 3; i++) {
+            bytes[] memory values = parseDataDynamicArray(structsData[i], 2);
+            bytes32[] memory staticValues = new bytes32[](2);
+            for (uint256 j = 0; j < 2; j++) {
+                staticValues[j] = dynamicToStatic(values[j]);
+            }
+            prices[i].maxFeePerGas = uint256(staticValues[0]);
+            prices[i].maxPriorityFeePerGas = uint256(staticValues[1]);
+        }
+        res.fast = prices[0];
+        res.slow = prices[1];
+        res.standard = prices[2];
+    }
+
+    function getUserOperationReceipt(bytes32 userOpHash) public returns (UserOperationReceipt memory) {}
 
     function chainId() public returns (uint256 id) {
         string[] memory params = new string[](0);
-        (RPCJson memory result, bytes memory data) = rpcCall(rpcNode, "eth_chainId", params);
+        (RPCJson memory result, bytes memory data) = rpcCall(rpcNode, "eth_chainId", params, false);
         id = uint256(parseDataStatic(data));
     }
 
     function supportedEntryPoints() public returns (address[] memory entrypoints) {
         string[] memory params = new string[](0);
-        (RPCJson memory result, bytes memory data) = rpcCall(bundler, "eth_supportedEntryPoints", params);
+        (RPCJson memory result, bytes memory data) = rpcCall(bundler, "eth_supportedEntryPoints", params, false);
         bytes32[] memory arrs = parseDataStaticArray(data);
         entrypoints = new address[](arrs.length);
         for (uint256 i = 0; i < arrs.length; i++) {
@@ -154,12 +173,42 @@ contract ZeroDev {
         }
     }
 
+    function parseDataDynamicArray(bytes memory data, uint256 len) internal view returns (bytes[] memory arr) {
+        arr = new bytes[](len);
+        for (uint256 i = 0; i < len; i++) {
+            uint256 offset = uint256(bytes32(slice(data, i * 32, 32)));
+            uint256 datalen = uint256(bytes32(slice(data, offset, 32)));
+            arr[i] = slice(data, offset + 32, datalen);
+        }
+    }
+
+    function parseDataStructArray(bytes memory data, uint256 len) internal view returns (bytes[] memory arr) {
+        arr = new bytes[](len);
+        for (uint256 i = 0; i < len; i++) {
+            uint256 offset = uint256(bytes32(slice(data, i * 32, 32)));
+            uint256 datalen =
+                (i == len - 1) ? data.length - offset : uint256(bytes32(slice(data, (i + 1) * 32, 32))) - offset;
+            arr[i] = slice(data, offset, datalen);
+        }
+    }
+
+    function dynamicToStatic(bytes memory data) internal view returns (bytes32 res) {
+        require(data.length <= 32, "data size too big to convert to static");
+        bytes memory value = slice(data, 0, data.length);
+        assembly {
+            res := mload(add(value, 0x20))
+        }
+        res = res >> ((32 - data.length) * 8);
+    }
+
     function sendUserOperation(PackedUserOperation memory op) public returns (bytes32 userOpHash) {
         string[] memory params = new string[](2);
-        params[0] = serializePackedOp(op);
-        params[1] = toHexString(ENTRYPOINT_0_7);
-        (, bytes memory data) = rpcCall(bundler, "eth_sendUserOperation", params);
-        userOpHash = parseDataStatic(data);
+        params[0] = op.serializePackedOp();
+        params[1] = string(abi.encodePacked('"', toHexString(ENTRYPOINT_0_7), '"'));
+        (, bytes memory data) = rpcCall(bundler, "eth_sendUserOperation", params, true);
+        console.log("Data :");
+        console.logBytes(data);
+        userOpHash = bytes32(data);
     }
 
     function sponsorUserOperation(PackedUserOperation memory op) public returns (PackedUserOperation memory) {}

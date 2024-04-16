@@ -16,6 +16,7 @@ struct PackedUserOperation {
 struct RPCJson {
     uint256 id;
     string jsonrpc;
+    string result;
 }
 
 struct RPCError {
@@ -28,10 +29,22 @@ struct UserOperationReceipt {
 }
 
 struct GasEstimationResult {
+    uint256 callGasLimit;
     uint256 paymasterPostOpGasLimit;
     uint256 paymasterVerificationGasLimit;
     uint256 preVerificationGas;
     uint256 verificationGasLimit;
+}
+
+struct GasPrice {
+    uint256 maxFeePerGas;
+    uint256 maxPriorityFeePerGas;
+}
+
+struct GasPriceResult {
+    GasPrice slow;
+    GasPrice standard;
+    GasPrice fast;
 }
 // bundler 0.7 userOp
 //  "params": [
