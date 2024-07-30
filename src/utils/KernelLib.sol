@@ -1,14 +1,14 @@
 // SPDX-License-Identifier : MIT
 pragma solidity ^0.8.0;
 
-import {Kernel} from "kernel_v3/src/Kernel.sol";
-import {FactoryStaker} from "kernel_v3/src/factory/FactoryStaker.sol";
-import {KernelFactory} from "kernel_v3/src/factory/KernelFactory.sol";
-import {ValidationType} from "kernel_v3/src/utils/ValidationTypeLib.sol";
-import {ExecLib} from "kernel_v3/src/utils/ExecLib.sol";
+import {Kernel} from "kernel/src/Kernel.sol";
+import {FactoryStaker} from "kernel/src/factory/FactoryStaker.sol";
+import {KernelFactory} from "kernel/src/factory/KernelFactory.sol";
+import {ValidationType} from "kernel/src/utils/ValidationTypeLib.sol";
+import {ExecLib} from "kernel/src/utils/ExecLib.sol";
 import {IEntryPoint} from "../interfaces/IEntryPoint.sol";
-import {VALIDATION_TYPE_ROOT} from "kernel_v3/src/types/Constants.sol";
-import {ECDSAValidator} from "kernel_v3/src/validator/ECDSAValidator.sol";
+import {VALIDATION_TYPE_ROOT} from "kernel/src/types/Constants.sol";
+import {ECDSAValidator} from "kernel/src/validator/ECDSAValidator.sol";
 import {Vm} from "forge-std/Vm.sol";
 import "../Structs.sol";
 

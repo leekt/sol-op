@@ -3,9 +3,9 @@ pragma solidity ^0.8.0;
 
 import {ZeroDev, ZD, PackedUserOperation} from "src/ZeroDev.sol";
 import {KernelLib} from "src/utils/KernelLib.sol";
-import {Kernel} from "kernel_v3/src/Kernel.sol";
+import {Kernel} from "kernel/src/Kernel.sol";
 import {EntryPointLib} from "src/utils/EntryPointLib.sol";
-import {VALIDATION_TYPE_ROOT} from "kernel_v3/src/types/Constants.sol";
+import {VALIDATION_TYPE_ROOT} from "kernel/src/types/Constants.sol";
 import {GasEstimationResult, GasPriceResult, SponsorUserOpResult} from "src/Structs.sol";
 import {ECDSA} from "solady/utils/ECDSA.sol";
 import {UserOperationLib} from "src/utils/UserOperationLib.sol";
