@@ -14,10 +14,10 @@ import "../Structs.sol";
 
 address constant DEPLOY_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
 IEntryPoint constant ENTRYPOINT = IEntryPoint(0x0000000071727De22E5E9d8BAf0edAc6f37da032);
-Kernel constant KERNEL = Kernel(payable(0x94F097E1ebEB4ecA3AAE54cabb08905B239A7D27));
+Kernel constant KERNEL = Kernel(payable(0xBAC849bB641841b44E965fB01A4Bf5F074f84b4D));
 FactoryStaker constant STAKER = FactoryStaker(0xd703aaE79538628d27099B8c4f621bE4CCd142d5);
-KernelFactory constant FACTORY = KernelFactory(0x6723b44Abeec4E71eBE3232BD5B455805baDD22f);
-ECDSAValidator constant ECDSA_VALIDATOR = ECDSAValidator(0x8104e3Ad430EA6d354d013A6789fDFc71E671c43);
+KernelFactory constant FACTORY = KernelFactory(0xaac5D4240AF87249B3f71BC8E4A2cae074A3E419);
+ECDSAValidator constant ECDSA_VALIDATOR = ECDSAValidator(0x845ADb2C711129d4f3966735eD98a9F09fC4cE57);
 address constant STAKE_OWNER = 0x9775137314fE595c943712B0b336327dfa80aE8A;
 Vm constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
@@ -81,7 +81,7 @@ library KernelLib {
             callData: callData,
             accountGasLimits: bytes32(abi.encodePacked(uint128(4000000), uint128(4000000))),
             preVerificationGas: 1000000,
-            gasFees: bytes32(abi.encodePacked(uint128(1), uint128(1))),
+            gasFees: bytes32(abi.encodePacked(uint128(1000000), uint128(1000000))),
             paymasterAndData: hex"",
             signature: hex"fffffffffffffffffffffffffffffff0000000000000000000000000000000007aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1c"
         });

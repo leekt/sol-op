@@ -114,6 +114,7 @@ library ZeroDev {
         string[] memory params = new string[](2);
         params[0] = op.serializePackedOp();
         params[1] = string(abi.encodePacked('"', LibString.toHexString(ENTRYPOINT_0_7), '"'));
+        console.log("Serialized : ", params[0]);
         (, bytes memory data) = zd.bundler.rpcCall("eth_sendUserOperation", params, true);
         userOpHash = bytes32(data);
     }

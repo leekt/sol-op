@@ -51,13 +51,13 @@ contract ZeroDevTest is Test {
         Kernel kernel = KernelLib.getAddress(owner);
         console.log("Kernel : ", address(kernel));
         PackedUserOperation memory op = KernelLib.prepareUserOp(
-            kernel, owner, VALIDATION_TYPE_ROOT, KernelLib.encodeExecute(owner, 1, hex""), false
+            kernel, owner, VALIDATION_TYPE_ROOT, KernelLib.encodeExecute(owner, 1, hex""), true
         );
-        zd.estimateUserOperationGas(op);
-        GasPriceResult memory res = zd.getUserOperationGasPrice();
-        op.applyGasPrice(res.fast);
-        SponsorUserOpResult memory sponsor = zd.sponsorUserOperation(op);
-        op.applySponsorResult(sponsor);
+        //zd.estimateUserOperationGas(op);
+        //GasPriceResult memory res = zd.getUserOperationGasPrice();
+        //op.applyGasPrice(res.fast);
+        //SponsorUserOpResult memory sponsor = zd.sponsorUserOperation(op);
+        //op.applySponsorResult(sponsor);
         bytes32 hash = zd.getUserOpHash(op);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerKey, ECDSA.toEthSignedMessageHash(hash));
         op.signature = abi.encodePacked(r, s, v);
