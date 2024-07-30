@@ -6,7 +6,7 @@ import {VmSafe} from "forge-std/Vm.sol";
 import "forge-std/console.sol";
 import "forge-std/StdJson.sol";
 import {LibString} from "solady/utils/LibString.sol";
-import {IEntryPoint} from "./interfaces/IEntryPoint.sol";
+import {IEntryPoint, PackedUserOperation} from "./interfaces/IEntryPoint.sol";
 import "./Structs.sol";
 import {UserOperationLib} from "./utils/UserOperationLib.sol";
 import {RPC} from "./utils/Rpc.sol";

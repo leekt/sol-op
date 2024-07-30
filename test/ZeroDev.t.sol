@@ -1,14 +1,14 @@
 // SPDX-License-Identifier : MIT
 pragma solidity ^0.8.0;
 
-import {ZeroDev, ZD, PackedUserOperation} from "src/ZeroDev.sol";
-import {KernelLib} from "src/utils/KernelLib.sol";
+import {ZeroDev, ZD, PackedUserOperation, IEntryPoint} from "../src/ZeroDev.sol";
+import {KernelLib} from "../src/utils/KernelLib.sol";
 import {Kernel} from "kernel/src/Kernel.sol";
-import {EntryPointLib} from "src/utils/EntryPointLib.sol";
+import {EntryPointLib} from "../src/utils/EntryPointLib.sol";
 import {VALIDATION_TYPE_ROOT} from "kernel/src/types/Constants.sol";
-import {GasEstimationResult, GasPriceResult, SponsorUserOpResult} from "src/Structs.sol";
+import {GasEstimationResult, GasPriceResult, SponsorUserOpResult} from "../src/Structs.sol";
 import {ECDSA} from "solady/utils/ECDSA.sol";
-import {UserOperationLib} from "src/utils/UserOperationLib.sol";
+import {UserOperationLib} from "../src/utils/UserOperationLib.sol";
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
@@ -19,6 +19,7 @@ contract ZeroDevTest is Test {
     ZD zd;
     address owner;
     uint256 ownerKey;
+    IEntryPoint entryPoint;
 
     function setUp() external {
         string memory bundler = vm.envString("TEST_BUNDLER");
@@ -28,7 +29,7 @@ contract ZeroDevTest is Test {
         vm.selectFork(fork);
         zd = ZeroDev.newZD(rpc, bundler, paymaster);
         (owner, ownerKey) = makeAddrAndKey("Owner");
-        EntryPointLib.deploy();
+        entryPoint = IEntryPoint(EntryPointLib.deploy());
         KernelLib.deploy();
     }
 
@@ -64,6 +65,11 @@ contract ZeroDevTest is Test {
         bytes32 h = zd.sendUserOperation(op);
         console.log("Hash :");
         console.logBytes32(hash);
+
+        console.log("Simulate :");
+        PackedUserOperation[] memory ops =  new PackedUserOperation[](1);
+        ops[0] = op;
+        entryPoint.handleOps(ops, payable(owner));
     }
 
     function testChainId() external {

@@ -1,4 +1,5 @@
-import {PackedUserOperation, SponsorUserOpResult} from "../Structs.sol";
+import {SponsorUserOpResult} from "../Structs.sol";
+import {PackedUserOperation} from "../interfaces/PackedUserOperation.sol";
 import {VmSafe} from "forge-std/Vm.sol";
 import {slice} from "./BytesLib.sol";
 import {GasPrice} from "../Structs.sol";

@@ -11,6 +11,7 @@ import {VALIDATION_TYPE_ROOT} from "kernel/src/types/Constants.sol";
 import {ECDSAValidator} from "kernel/src/validator/ECDSAValidator.sol";
 import {Vm} from "forge-std/Vm.sol";
 import "../Structs.sol";
+import {PackedUserOperation} from "../interfaces/PackedUserOperation.sol";
 
 address constant DEPLOY_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
 IEntryPoint constant ENTRYPOINT = IEntryPoint(0x0000000071727De22E5E9d8BAf0edAc6f37da032);
@@ -61,7 +62,8 @@ library KernelLib {
             bytes21(abi.encodePacked(hex"01", ECDSA_VALIDATOR)),
             address(0),
             abi.encodePacked(signer),
-            hex""
+            hex"",
+            new bytes[](0)
         );
     }
 
@@ -79,7 +81,7 @@ library KernelLib {
                 )
                 : abi.encodePacked(hex""),
             callData: callData,
-            accountGasLimits: bytes32(abi.encodePacked(uint128(4000000), uint128(4000000))),
+            accountGasLimits: bytes32(abi.encodePacked(uint128(8000000), uint128(8000000))),
             preVerificationGas: 1000000,
             gasFees: bytes32(abi.encodePacked(uint128(1000000), uint128(1000000))),
             paymasterAndData: hex"",
