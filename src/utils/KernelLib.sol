@@ -35,11 +35,11 @@ library KernelLib {
     }
 
     function getAddress(address signer) internal view returns (Kernel kernel) {
-        kernel = Kernel(payable(FACTORY.getAddress(initData(signer), bytes32(0))));
+        kernel = Kernel(payable(FACTORY.getAddress(initData(signer), bytes32(uint256(0)))));
     }
 
     function deployAccount(address signer) internal returns (Kernel kernel) {
-        STAKER.deployWithFactory(FACTORY, initData(signer), bytes32(0));
+        STAKER.deployWithFactory(FACTORY, initData(signer), bytes32(uint256(0)));
     }
 
     function encodeExecute(address _to, uint256 _amount, bytes memory _data) internal view returns (bytes memory) {
@@ -77,12 +77,12 @@ library KernelLib {
             initCode: notDeployed
                 ? abi.encodePacked(
                     address(STAKER),
-                    abi.encodeWithSelector(FactoryStaker.deployWithFactory.selector, FACTORY, initData(signer), bytes32(0))
+                    abi.encodeWithSelector(FactoryStaker.deployWithFactory.selector, FACTORY, initData(signer), bytes32(uint256(0)))
                 )
                 : abi.encodePacked(hex""),
             callData: callData,
-            accountGasLimits: bytes32(abi.encodePacked(uint128(8000000), uint128(8000000))),
-            preVerificationGas: 1000000,
+            accountGasLimits: bytes32(abi.encodePacked(uint128(400000), uint128(100000))),
+            preVerificationGas: 50000,
             gasFees: bytes32(abi.encodePacked(uint128(1000000), uint128(1000000))),
             paymasterAndData: hex"",
             signature: hex"fffffffffffffffffffffffffffffff0000000000000000000000000000000007aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1c"

@@ -61,18 +61,13 @@ library ZeroDev {
         string[] memory params = new string[](2);
         params[0] = op.serializePackedOp();
         params[1] = string(abi.encodePacked('"', LibString.toHexString(ENTRYPOINT_0_7), '"'));
-        (RPCJson memory result, bytes memory data) = zd.bundler.rpcCall("eth_estimateUserOperationGas", params, false);
-        bytes[] memory arr = data.parseDataDynamicArray(5);
-        uint256[] memory values = new uint256[](5);
-        for (uint256 i = 0; i < arr.length; i++) {
-            values[i] = uint256(arr[i].dynamicToStatic());
-        }
+        string memory raw = zd.bundler.rpcCallRaw("eth_estimateUserOperationGas", params);
         // json is parsed on alphabetical order
-        res.callGasLimit = values[0];
-        res.paymasterPostOpGasLimit = values[1];
-        res.paymasterVerificationGasLimit = values[2];
-        res.preVerificationGas = values[3];
-        res.verificationGasLimit = values[4];
+        res.callGasLimit = vm.parseJsonUint(raw, ".result.callGasLimit");
+        res.paymasterPostOpGasLimit = 0;
+        //res.paymasterVerificationGasLimit = vm.parseJsonUint(raw, ".result.paymasterVerificationGasLimit");
+        res.preVerificationGas = vm.parseJsonUint(raw, ".result.preVerificationGas");
+        res.verificationGasLimit = vm.parseJsonUint(raw, ".result.verificationGasLimit");
     }
 
     function getUserOperationGasPrice(ZD memory zd) internal returns (GasPriceResult memory res) {

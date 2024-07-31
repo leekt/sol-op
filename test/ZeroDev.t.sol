@@ -54,7 +54,8 @@ contract ZeroDevTest is Test {
         PackedUserOperation memory op = KernelLib.prepareUserOp(
             kernel, owner, VALIDATION_TYPE_ROOT, KernelLib.encodeExecute(owner, 1, hex""), true
         );
-        //zd.estimateUserOperationGas(op);
+        zd.estimateUserOperationGas(op);
+        console.log("CHAINID : ", block.chainid);
         //GasPriceResult memory res = zd.getUserOperationGasPrice();
         //op.applyGasPrice(res.fast);
         //SponsorUserOpResult memory sponsor = zd.sponsorUserOperation(op);
